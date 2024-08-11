@@ -1,31 +1,36 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"net/http"
+	"todo_app/internal/config"
 	"todo_app/internal/db"
+	"todo_app/internal/routes"
 )
 
 func main() {
-	// Initialize the database connection
-	db.InitDB("appuser:123456@tcp(127.0.0.1:3306)/todo_app")
-	defer db.CloseDB()
+	// 读取配置
+	config.LoadConfig()
 
-	// Create a new todo item
-	id, err := db.CreateTodo("Learn Go", "Read Go documentation")
+	// 初始化数据库
+	err := db.InitDB(config.DatabaseDSN)
 	if err != nil {
-		fmt.Println("Error creating todo:", err)
-		return
+		log.Fatalf("Failed to initialize database: %v", err)
 	}
-	fmt.Printf("New todo created with ID: %d\n", id)
 
-	// Retrieve all todo items
-	todos, err := db.GetTodos()
+	// 运行数据库迁移
+	err = db.RunMigrations(db.GetDB())
 	if err != nil {
-		fmt.Println("Error retrieving todos:", err)
-		return
+		log.Fatalf("Failed to run migrations: %v", err)
 	}
-	for _, todo := range todos {
-		fmt.Printf("Todo ID: %d, Title: %s, Description: %s, Completed: %v\n",
-			todo.ID, todo.Title, todo.Description, todo.Completed)
+
+	// 设置路由
+	r := routes.SetupRoutes()
+
+	// 启动 HTTP 服务器
+	log.Println("Starting server on :80")
+	err = http.ListenAndServe(":80", r)
+	if err != nil {
+		log.Fatalf("Failed to start server: %v", err)
 	}
 }
