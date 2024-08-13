@@ -5,8 +5,8 @@ import (
 )
 
 type User struct {
-	UID          uint      `json:"uid"`
-	Username     string    `json:"username"`
-	PasswordHash string    `json:"password_hash"`
-	CreatedAt    time.Time `json:"created_at"`
+	UID       uint      `json:"uid"`
+	Email     string    `json:"email"`
+	Password  string    `json:"password"`
+	CreatedAt time.Time `json:"created_at"`
 }

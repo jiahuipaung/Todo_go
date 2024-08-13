@@ -11,6 +11,6 @@ type Todo struct {
 	Description     string    `json:"description"`
 	Completed       bool      `json:"completed"`
 	CreatedAt       time.Time `json:"createdAt"`
-	ItemDeadline    time.Time `json:"updatedAt"`
+	ItemDeadline    string    `json:"itemDeadline"`
 	NeedCheckInDays uint      `json:"needCheckInDays"`
 }

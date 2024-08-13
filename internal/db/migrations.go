@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"strings"
 )
 
 func RunMigrations(db *sql.DB) error {
@@ -13,10 +14,17 @@ func RunMigrations(db *sql.DB) error {
 		return err
 	}
 
-	_, err = DB.Exec(string(migrationScript))
-	if err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
-		return err
+	// 以分号分割 SQL 脚本
+	statements := strings.Split(string(migrationScript), ";")
+	for _, stmt := range statements {
+		stmt = strings.TrimSpace(stmt)
+		if len(stmt) > 0 {
+			_, err := db.Exec(stmt)
+			if err != nil {
+				log.Fatalf("Failed to execute statement: %v", err)
+				return err
+			}
+		}
 	}
 	return nil
 }

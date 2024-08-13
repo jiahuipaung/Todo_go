@@ -12,20 +12,21 @@ import (
 func SetupRoutes() *mux.Router {
 	r := mux.NewRouter()
 
-	// Todo 路由
-	r.HandleFunc("/getTodos", myhandlers.GetTodos).Methods("GET")
-	r.HandleFunc("/post_todo", handlers.PostTodos).Methods("POST")
-
 	// CORS 配置
 	corsHandler := handlers.CORS(
 		handlers.AllowedOrigins([]string{"http://localhost:3000"}), // 允许的源
 		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
 		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
 	)(r)
-
 	http.Handle("/", corsHandler)
+
+	// Todo 路由
+	r.HandleFunc("/getTodos", myhandlers.GetTodos).Methods("GET")
+	r.HandleFunc("/postTodo", myhandlers.PostTodo).Methods("POST")
+
 	// 用户路由（如果有用户功能）
-	r.HandleFunc("/users", myhandlers.GetUsers).Methods("GET")
+	r.HandleFunc("/registerUser", myhandlers.RegisterUser).Methods("POST")
+	r.HandleFunc("/loginUser", myhandlers.LoginUser).Methods("POST")
 
 	// 使用身份验证中间件
 	r.Use(middleware.AuthMiddleware)

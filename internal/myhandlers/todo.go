@@ -60,7 +60,7 @@ func GetTodos(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func PostTodos(w http.ResponseWriter, r *http.Request) {
+func PostTodo(w http.ResponseWriter, r *http.Request) {
 	//解析todo数据
 	var todo models.Todo
 	decoder := json.NewDecoder(r.Body)
@@ -75,17 +75,25 @@ func PostTodos(w http.ResponseWriter, r *http.Request) {
 		todo.CreatedAt = time.Now()
 	}
 
-	
-
 	// 连接数据库
 	dbConn := db.GetDB()
 
-	// 插入 TODO 到数据库
-	query := `INSERT INTO todos (itemId, uid, itemName, description, completed, created_at, itemDeadline, needCheckInDays) 
-              VALUES (?, ?, ?, ?, ?, ?, ?)`
-	_, err = dbConn.Exec(query, todo.ItemId, todo.UID, todo.ItemName, todo.Description, todo.Completed, todo.CreatedAt, todo.ItemDeadline, todo.NeedCheckInDays)
+	// 定义时间字符串和对应的布局
+	layout := time.RFC3339 // 标准 ISO 8601 格式布局
+
+	// 解析时间字符串
+	itemDeadlineTimeStamp, err := time.Parse(layout, todo.ItemDeadline)
 	if err != nil {
-		http.Error(w, "Failed to insert TODO", http.StatusInternalServerError)
+		fmt.Println("Error parsing time:", err)
+		return
+	}
+
+	// 插入 TODO 到数据库
+	query := `INSERT INTO todos (uid, itemName, description, created_at, itemDeadline, needCheckInDays) 
+              VALUES (?, ?, ?, ?, ?, ?)`
+	_, err = dbConn.Exec(query, todo.UID, todo.ItemName, todo.Description, todo.CreatedAt, itemDeadlineTimeStamp, todo.NeedCheckInDays)
+	if err != nil {
+		http.Error(w, "Failed to insert Todo", http.StatusInternalServerError)
 		return
 	}
 
