@@ -1,4 +1,4 @@
-package myhandlers
+package todo_handler
 
 import (
 	"encoding/json"
@@ -6,21 +6,20 @@ import (
 	"log"
 	"net/http"
 	"time"
-	"todo_app/internal/db"
-	"todo_app/internal/models"
+	"todoServer/internal/db"
+	"todoServer/internal/gee"
+	"todoServer/internal/models"
 )
 
-func GetTodos(w http.ResponseWriter, r *http.Request) {
+func GetTodos(c *gee.Context) {
 	// 从查询参数中获取 uid
-	uid := r.URL.Query().Get("uid")
+	uid := c.Query("uid")
 
-	// // 如果没有提供 uid，返回错误
-	// if uid ==  {
-	// 	http.Error(w, "Missing uid parameter", http.StatusBadRequest)
-	// 	return
-	// }
-
-	fmt.Printf("uid=%s \n", uid)
+	// 如果没有提供 uid，返回错误
+	if uid == "" {
+		c.Status(http.StatusBadRequest)
+		return
+	}
 
 	// 连接数据库
 	dbConn := db.GetDB()
@@ -30,7 +29,7 @@ func GetTodos(w http.ResponseWriter, r *http.Request) {
 	rows, err := dbConn.Query(query, uid)
 	if err != nil {
 		log.Printf("Error querying todos: %v", err)
-		http.Error(w, "Error querying todos", http.StatusInternalServerError)
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -40,7 +39,7 @@ func GetTodos(w http.ResponseWriter, r *http.Request) {
 		var todo models.Todo
 		if err := rows.Scan(&todo.ItemId, &todo.UID, &todo.ItemName); err != nil {
 			log.Printf("Error scanning row: %v", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			c.Status(http.StatusInternalServerError)
 			return
 		}
 		todos = append(todos, todo)
@@ -49,26 +48,17 @@ func GetTodos(w http.ResponseWriter, r *http.Request) {
 	// 检查查询是否遇到错误
 	if err := rows.Err(); err != nil {
 		log.Printf("Error in row iteration: %v", err)
-		http.Error(w, "Error processing query results", http.StatusInternalServerError)
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(todos); err != nil {
-		log.Printf("Error encoding response: %v", err)
-		http.Error(w, "Error encoding response", http.StatusInternalServerError)
-	}
+	c.JSON(http.StatusOK, todos)
 }
 
-func PostTodo(w http.ResponseWriter, r *http.Request) {
+func PostTodo(c *gee.Context) {
 	//解析todo数据
 	var todo models.Todo
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&todo)
-	if err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
-	}
+	c.PostForm()
 
 	// 设置默认值
 	if todo.CreatedAt.IsZero() {

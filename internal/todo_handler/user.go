@@ -1,13 +1,14 @@
-package myhandlers
+package todo_handler
 
 import (
 	"encoding/json"
 	"log"
 	"net/http"
 	"time"
-	"todo_app/internal/db"
-	"todo_app/internal/models"
-	"todo_app/internal/utils"
+	"todoServer/internal/db"
+	"todoServer/internal/gee"
+	"todoServer/internal/models"
+	"todoServer/internal/utils"
 )
 
 // func setLoginCookie(w http.ResponseWriter, uid uint) {
@@ -25,7 +26,7 @@ import (
 // 	http.SetCookie(w, cookie)
 // }
 
-func RegisterUser(w http.ResponseWriter, r *http.Request) {
+func RegisterUser(c *gee.Context) {
 	var user models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -62,7 +63,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(rsp)
 }
 
-func LoginUser(w http.ResponseWriter, r *http.Request) {
+func LoginUser(c *gee.Context) {
 	var user models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
